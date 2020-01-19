@@ -39,12 +39,23 @@ impl POS {
         let mut bytes = nonce_bytes[0..].to_vec();
         bytes.extend(block_hash);
         let hash = blake2b(&bytes);
-        for i in 0..self.target {
-            if hash.as_bytes()[i] != 0 {
-                return false;
+        let mut target = self.target;
+        for v in hash.as_bytes() {
+            if v == 0 {
+                if target <= 8 {
+                    return true;
+                }
+                target -= 8;
+            } else {
+                let lz = u8::leading_zeros(*v);
+                if lz <= target {
+                    return false;
+                } else {
+                    return true;
+                }
             }
         }
-        true
+        false
     }
 
     pub fn interrupt(&self) {
